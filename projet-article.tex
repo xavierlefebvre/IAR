@@ -1,0 +1,73 @@
+\documentclass[a4paper]{article}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathrsfs}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+
+\begin{document}
+
+
+\begin{algorithm}[!ht]
+\caption{Evolutionary Algorithm}
+\begin{algorithmic}
+\Procedure{Loop}{}
+\State $N \gets \{n_1,n_2,...,n_{10}\}$ \Comment{random controllers ($n$ nodes, $2n$ connections)}
+\State $C \gets \{c_1,c_2,...,c_{15}\}$ \Comment{initial conditions}
+\State $E \gets \{e_1,e_2,...,e_4\}$ \Comment{environments}
+\State $conditionsNb \gets$ length($C$) $*$ length($E$)
+\State $startTime \gets time()$
+\Loop
+	\State $S \gets$ \Call{score}{C,E,N,startTime}
+	\If{max($S$) $\neq conditionsNb$ \textbf{and} $(time() - startTime) < 2$ hours}
+		\State $N \gets$ \Call{evolve}{$N$,$S$}
+	\Else
+		\State break
+	\EndIf
+\EndLoop
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[!ht]
+\caption{Return ...}
+\begin{algorithmic}
+\Procedure{score}{$C$,$E$,$N$,$startTime$}
+\State $S \gets \{0,...,0\}$ \Comment{controllers' scores}
+\ForAll{$c_i$}
+	\ForAll{$e_j$}
+		\ForAll{$n_k$}
+			\State $s_k \gets s_k + (1-\frac{D_L+D_R}{2D_{max}})$
+		\EndFor
+		\If{max($S$) $\neq (l-1)*j+j$ \textbf{or} $(time() - startTime) \geq 2$ hours}
+			\State \textbf{return} $S$ \Comment{controllers failure or time exceed}
+		\EndIf
+	\EndFor
+\EndFor
+\State \textbf{return} $S$ \Comment{one or more controllers succeed}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[!ht]
+\caption{Return a new generation of controllers based on previous ones and their scores}
+\begin{algorithmic}
+\Procedure{evolve}{$N$,$S$}
+
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[!ht]
+\caption{Return a new mutated controller}
+\begin{algorithmic}
+\Procedure{mutate}{$n$}
+
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\end{document}
