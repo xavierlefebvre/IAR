@@ -31,7 +31,8 @@ def getDesiredAngles(neurons):
 	return np.dot( np.array([30,15]), neurons.reshape((len(neurons)/2,2)).T)
 
 def getXY(armsLengths,angles):
-	angles = np.cumsum(angles)
+	armsLeftFingersAngles = np.cumsum(angles[0:5])
+	angles = np.concatenate( (armsLeftFingersAngles , np.cumsum(angles[5:7]) + armsLeftFingersAngles[2]) )
 	arms = [ [0.,0.] ]
 	for idx,angle in enumerate(angles[0:3]):
 		x=arms[idx][0] + armsLengths[idx] * round(math.sin(math.radians(angle)),2)
@@ -100,10 +101,10 @@ def runTests():
 	armsLenghtsInput = [1,1,1,1,1,1,1]
 	anglesInput = [
 		[0,0,0,0,0,0,0],
-		[0,-45,-45,-45,-45,45,45]]
+		[0,-45,-45,-45,-45,45,-45]]
 	expected = [
 		[ [0.,0.], [0.,1.], [0.,2.], [0.,3.], [0.,4.], [0.,5.], [0.,4.], [0.,5.] ],
-		[[0.0, 0.0], [0.0, 1.0], [-0.71, 1.71], [-1.71, 1.71], [-2.42, 1.0], [-2.42, 0.0], [-2.42, 1.0], [-3.42, 1.0]]]
+		[ [0.,0.], [0.,1.], [-0.71,1.71], [-1.71,1.71], [-2.42,1.], [-2.42,0.], [-2.42,2.42], [-3.42,2.42]] ]
 	output = []
 	for angles in anglesInput:
 		output.append( getXY(armsLenghtsInput,angles) )
