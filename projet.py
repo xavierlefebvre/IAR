@@ -32,10 +32,13 @@ def getDesiredAngles(neurons):
 
 def getRandomController(neurons,connectionNb):
 	connections = np.zeros((len(neurons),len(neurons)), dtype=np.int)
-	indices=[(i,j) for i in range(len(neurons)) for j in range(len(neurons)) if i!=j ]
-	for i,j in random.sample(indices,connectionNb):
+	for i,j in random.sample([(i,j) for i in range(len(neurons)) for j in range(len(neurons)) if i!=j ],connectionNb):
 		connections[i,j] = np.random.choice([-1,1])
 	return (neurons,connections)
+
+def run(controller):
+	neurons,connections = controller
+	return(np.where( np.dot(neurons,connections) < 0, -1, 1),connections)
 
 def getXY(armsLengths,angles):
 	armsLeftFingersAngles = np.cumsum(angles[0:5])
@@ -114,6 +117,3 @@ runTests()
 
 envs = [(l,b),(l,s),(r,b),(r,s)]
 ic = np.array( [applyNoise(initNeurons(env)) for env in envs] )
-
-controller = getRandomController(ic[0][0],28)
-print( np.diag(controller[1]))
