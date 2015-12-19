@@ -52,13 +52,13 @@ def getXY(armsLengths,angles):
 
 def getRandomController(neurons,connectionNb):
 	connections = []
-	neuronsList = np.arange(len(neurons))
+	neuronsList = set(np.arange(len(neurons)))
 	while connectionNb > 0:
 		connection = random.sample(neuronsList,2)
 		if not( connection in connections):
 			connections.append(connection)
 			connectionNb -= 1
-	return (neurons,connections)
+	return (neurons,np.array(connections))
 
 def runTests():
 	#initNeuronsTest
@@ -117,5 +117,8 @@ runTests()
 
 envs = [(l,b),(l,s),(r,b),(r,s)]
 ic = np.array( [applyNoise(initNeurons(env)) for env in envs] )
+
+print( ic )
+print( getRandomController(ic[0][0],28) )
 
 
