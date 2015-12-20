@@ -13,11 +13,11 @@ rs =  3.18 # right small abscissa
 ls = -3.18 # left small abscissa
 bb = -1.71 # bottom big ordinate
 bs = -0.76 # botton small ordinate
-b  =  2.42 # bid radian
-s  =  1.08 # small radian
+b  =  2.42 # bid radius
+s  =  1.08 # small radius
 
 #environments
-envs = [(lb,b,bb,5+4.47),(ls,s,bs,5+3.36),(rb,b,bb,5+4.47),(rs,s,bs,5+3.36)]
+envs = [(lb,b,bb,5+4.47),(ls,s,bs,5+3.27),(rb,b,bb,5+4.47),(rs,s,bs,5+3.27)]
 
 def initNeurons(env):
 	neurons = np.ones((7,2), dtype=np.int)
@@ -65,11 +65,11 @@ def getXY(angles):
 
 def fitness(envIdx,neurons):
 	global envs
-	side,size,hight,Dmax = envs[envIdx]
+	side,radius,hight,Dmax = envs[envIdx]
 	xy = getXY(getDesiredAngles(neurons))
-	DL = np.abs( np.linalg.norm([xy[5][0]-side,xy[5][1]-hight]) - size)
-	DR = np.abs( np.linalg.norm([xy[7][0]-side,xy[7][1]-hight]) - size)
-	return 1 - (DL + DR) / Dmax
+	DL = round( np.abs( np.linalg.norm([xy[5][0]-side,xy[5][1]-hight]) - radius), 2)
+	DR = round( np.abs( np.linalg.norm([xy[7][0]-side,xy[7][1]-hight]) - radius), 2)
+	return 1 - (DL + DR) / (2 * Dmax)
 
 def score(envsIdx,ic,controllers,startTime):
 	scores = np.zeros(len(controllers))
@@ -81,7 +81,7 @@ def score(envsIdx,ic,controllers,startTime):
 				n = step(neurons,controller)
 			scores[controllerIdx] += fitness(envsIdx[icIdx],n)
 		icTested += 1
-		if np.max(scores) != icTested:
+		if np.max(scores) != icTested and (time.time() - startTime) < (2 * 3600):
 			return scores
 	return scores
 
