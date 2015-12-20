@@ -12,7 +12,7 @@ lb = -4.13 # left  big abscissa
 rs =  3.18 # right small abscissa
 ls = -3.18 # left small abscissa
 bb = -1.71 # bottom big ordinate
-bs = -1.08 # botton small ordinate
+bs = -0.76 # botton small ordinate
 b  =  2.42 # bid radian
 s  =  1.08 # small radian
 
@@ -92,24 +92,26 @@ def evolve(controllers,scores):
 			r = np.sum( controller != 0, axis=0)
 			for u,ru in enumerate(r) :
 				#node u targeted for change
-				if( np.random.rand(1)<=0.05):
+				if(np.random.rand(1)<=0.05):
 					pu = (4*ru)/(3*ru+14)
 					#random incoming connection has to be remove
-					w = np.random.randint(14)
 					if np.random.rand(1)<=pu:
 						try:
-							w = np.random.choice( np.flatnonzero(controller[:,u] == 0) )
+							w = np.random.choice( np.flatnonzero(controller[:,u]) )
+							controller[w][u] = 0
 						except ValueError:
 							pass
 					#random incoming connection has to be created
 					else:
 						try:
-							w = np.random.choice( np.flatnonzero(controller[:,u]) )
+							choices = np.ma.masked_array(controller[:,u] == 0)
+							choices[u] = np.ma.masked
+							choices = np.flatnonzero(choices)
+							w = np.random.choice( choices )
+							controller[w][u] = np.random.choice([-1,1])
 						except ValueError:
 							pass
-						controller[w][u] = np.random.choice([-1,1])
 	return controllers
-
 
 #INITIAL CONDITIONS
 # icMat
