@@ -20,6 +20,9 @@ s  =  1.08 # small radius
 envs = [(lb,b,bb,5+4.47),(rs,s,bs,5+3.27),(rb,b,bb,5+4.47),(ls,s,bs,5+3.27)]
 
 def initNeurons(env):
+	global b
+	global lb
+	global ls
 	neurons = np.ones((7,2), dtype=np.int)
 	if env[1] == b:
 		neurons[:,0] *= -1
@@ -71,22 +74,24 @@ def fitness(envIdx,neurons):
 	DR = round( np.abs( np.linalg.norm([xy[7][0]-side,xy[7][1]-hight]) - radius), 2)
 	return 1 - (DL + DR) / (2 * Dmax)
 
-def score(envsIdx,ic,controllers,startTime):
+def evaluate(envsIdx,ic,controllers,startTime):
 	scores = np.zeros(len(controllers))
 	icTested = 0
+	scoresMasked = np.ma.masked_less(scores,icTested)
 	for icIdx,neurons in enumerate(ic):
-		for controllerIdx,controller in enumerate(controllers):
+		for controllerIdx,score in enumerate(scoresMasked):
 			previous = np.copy(neurons)
 			for w in range(12):
-				next = step(previous,controller)
+				next = step(previous,controllers[controllerIdx])
 				if(np.array_equal(previous,next)):
 					break
 				previous = next
-			scores[controllerIdx] += fitness(envsIdx[icIdx],previous)
+			scoresMasked[controllerIdx] += fitness(envsIdx[icIdx],previous)
 		icTested += 1
-		if np.max(scores) != icTested and (time.time() - startTime) < (2 * 3600):
-			return scores
-	return scores
+		scoresMasked.mask = scoresMasked < icTested
+		if scoresMasked.count() < icTested and (time.time() - startTime) < (2 * 3600):
+			return scoresMasked.data
+	return scoresMasked.data
 
 def evolve(controllers,scores):
 	bestControllerIdx = np.argmax(scores)
@@ -142,23 +147,17 @@ envsIdxCol = np.tile(np.arange(4), 15)  # [0,1,2,3,0,1,2,3,...,3]
 #  [ 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,-1, 0, 0]]
 controllers = np.array([getRandomController(28) for i in range(10) ])
 
-previousBestController=[]
-previousBestScore = 0
-previousBestControllerIdx=0
+bestscore=0
 #MAIN LOOP
 startTime = time.time()
 while True:
-	s = score(envsIdxCol,icCol,controllers,startTime)
+	s = evaluate(envsIdxCol,icCol,controllers,startTime)
+	max = s.max()
+	if bestscore < max:
+		bestscore = max
+		print(max)
+		print(s)
 	if np.max(s) != 60 and (time.time() - startTime) < (2 * 3600):
 		controllers = evolve(controllers,s)
 	else:
 		break
-	
-	if previousBestScore > np.max(s):
-		print("%.4f"%previousBestScore,"->","%.4f"%np.max(s))
-		print(previousBestControllerIdx,"->",np.argmax(s))
-		print("diff controllers")
-		print(previousBestController - controllers[np.argmax(s)])
-	previousBestScore = np.max(s)
-	previousBestController = np.copy(controllers[np.argmax(s)])
-	previousBestControllerIdx = np.argmax(s)
