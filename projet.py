@@ -17,13 +17,13 @@ b  =  2.42 # big radius
 s  =  1.08 # small radius
 
 #environments
-envs = [(lb,b,bb,5+4.47),(ls,s,bs,5+3.27),(rb,b,bb,5+4.47),(rs,s,bs,5+3.27)]
+envs = [(lb,b,bb,5+4.47),(rs,s,bs,5+3.27),(rb,b,bb,5+4.47),(ls,s,bs,5+3.27)]
 
 def initNeurons(env):
 	neurons = np.ones((7,2), dtype=np.int)
-	if env[0] == lb or env[0] == ls:
+	if env[1] == b:
 		neurons[:,0] *= -1
-	if env[2] == bb:
+	if env[0] == lb or env[0] == ls:
 		neurons[:,1] *= -1
 	return neurons.reshape((neurons.size,))
 
@@ -76,10 +76,13 @@ def score(envsIdx,ic,controllers,startTime):
 	icTested = 0
 	for icIdx,neurons in enumerate(ic):
 		for controllerIdx,controller in enumerate(controllers):
-			n = np.copy(neurons)
+			previous = np.copy(neurons)
 			for w in range(12):
-				n = step(neurons,controller)
-			scores[controllerIdx] += fitness(envsIdx[icIdx],n)
+				next = step(previous,controller)
+				if(np.array_equal(previous,next)):
+					break
+				previous = next
+			scores[controllerIdx] += fitness(envsIdx[icIdx],previous)
 		icTested += 1
 		if np.max(scores) != icTested and (time.time() - startTime) < (2 * 3600):
 			return scores
@@ -139,6 +142,9 @@ envsIdxCol = np.tile(np.arange(4), 15)  # [0,1,2,3,0,1,2,3,...,3]
 #  [ 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,-1, 0, 0]]
 controllers = np.array([getRandomController(28) for i in range(10) ])
 
+previousBestController=[]
+previousBestScore = 0
+previousBestControllerIdx=0
 #MAIN LOOP
 startTime = time.time()
 while True:
@@ -147,3 +153,12 @@ while True:
 		controllers = evolve(controllers,s)
 	else:
 		break
+	
+	if previousBestScore > np.max(s):
+		print("%.4f"%previousBestScore,"->","%.4f"%np.max(s))
+		print(previousBestControllerIdx,"->",np.argmax(s))
+		print("diff controllers")
+		print(previousBestController - controllers[np.argmax(s)])
+	previousBestScore = np.max(s)
+	previousBestController = np.copy(controllers[np.argmax(s)])
+	previousBestControllerIdx = np.argmax(s)
