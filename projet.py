@@ -13,7 +13,7 @@ rs =  3.18 # right small abscissa
 ls = -3.18 # left small abscissa
 bb = -1.71 # bottom big ordinate
 bs = -0.76 # botton small ordinate
-b  =  2.42 # bid radius
+b  =  2.42 # big radius
 s  =  1.08 # small radius
 
 #environments
@@ -23,7 +23,7 @@ def initNeurons(env):
 	neurons = np.ones((7,2), dtype=np.int)
 	if env[0] == lb or env[0] == ls:
 		neurons[:,0] *= -1
-	if env[1] == rb or env[1] == rs:
+	if env[2] == bb:
 		neurons[:,1] *= -1
 	return neurons.reshape((neurons.size,))
 
@@ -128,8 +128,8 @@ icLin = icMat.reshape((60,14))
 icCol = icMat.T.reshape((14,60)).T
 
 #ENVIRONMENT IDX
-envsIdxLin = np.repeat(np.arange(4),14) # [0,0,0,0,1,1,1,1,...,3]
-envsIdxCol = np.tile(np.arange(4), 14)  # [0,1,2,3,0,1,2,3,...,3]
+envsIdxLin = np.repeat(np.arange(4),15) # [0,0,0,0,1,1,1,1,...,3]
+envsIdxCol = np.tile(np.arange(4), 15)  # [0,1,2,3,0,1,2,3,...,3]
 
 #INITIAL RANDOM CONTROLLERS
 # 1 controller
