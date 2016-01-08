@@ -95,31 +95,47 @@ def evaluate(envsIdx,ic,controllers,startTime):
 
 def evolve(controllers,scores):
 	bestControllerIdx = np.argmax(scores)
-	for controllerIdx,controller in enumerate(controllers):
-		if controllerIdx != bestControllerIdx:
-			r = np.sum( controller != 0, axis=0)
-			for u,ru in enumerate(r) :
-				#node u targeted for change
-				if(np.random.rand(1)<=0.05):
-					pu = (4*ru)/(3*ru+14)
-					#random incoming connection has to be remove
-					if np.random.rand(1)<=pu:
-						try:
-							w = np.random.choice( np.flatnonzero(controller[:,u]) )
-							controller[w][u] = 0
-						except ValueError:
-							pass
-					#random incoming connection has to be created
-					else:
-						try:
-							choices = np.ma.masked_array(controller[:,u] == 0)
-							choices[u] = np.ma.masked
-							choices = np.flatnonzero(choices)
-							w = np.random.choice( choices )
-							controller[w][u] = np.random.choice([-1,1])
-						except ValueError:
-							pass
-	return controllers
+	totalScore = sum(scores)
+	CopCont=[(int(math.ceil(9.0*score/totalScore)),idx) for idx,score in enumerate(scores)]
+	CopCont.sort()
+
+	toMutate=[]
+	
+	for i in CopCont:
+	    for j in range(i[0]):
+	        toMutate.append(controllers[i[1]])
+	        if len(toMutate)>=9:
+	            break
+	    if len(toMutate)>=9:
+	        break
+	
+	
+	
+	
+	for controllerIdx,controller in enumerate(toMutate):
+		r = np.sum( controller != 0, axis=0)
+		for u,ru in enumerate(r) :
+			#node u targeted for change
+			if(np.random.rand(1)<=0.05):
+				pu = (4*ru)/(3*ru+14)
+				#random incoming connection has to be remove
+				if np.random.rand(1)<=pu:
+					try:
+						w = np.random.choice( np.flatnonzero(controller[:,u]) )
+						controller[w][u] = 0
+					except ValueError:
+						pass
+				#random incoming connection has to be created
+				else:
+					try:
+						choices = np.ma.masked_array(controller[:,u] == 0)
+						choices[u] = np.ma.masked
+						choices = np.flatnonzero(choices)
+						w = np.random.choice( choices )
+						controller[w][u] = np.random.choice([-1,1])
+					except ValueError:
+						pass
+	return np.array([controllers[bestControllerIdx]]+toMutate)
 
 #INITIAL CONDITIONS
 # icMat
