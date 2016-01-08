@@ -89,7 +89,7 @@ def evaluate(envsIdx,ic,controllers,startTime):
 			scoresMasked[controllerIdx] += fitness(envsIdx[icIdx],previous)
 		icTested += 1
 		scoresMasked.mask = scoresMasked < icTested
-		if scoresMasked.count() < icTested and (time.time() - startTime) < (2 * 3600):
+		if scoresMasked.count() < 1 and (time.time() - startTime) < (2 * 3600):
 			return scoresMasked.data
 	return scoresMasked.data
 
