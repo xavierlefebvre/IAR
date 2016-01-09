@@ -89,21 +89,20 @@ def evaluate(envsIdx,ic,controllers,startTime):
 			scoresMasked[controllerIdx] += fitness(envsIdx[icIdx],previous)
 		icTested += 1
 		scoresMasked.mask = scoresMasked < icTested
-		if scoresMasked.count() < 1 and (time.time() - startTime) < (2 * 3600):
-			return scoresMasked.data
-	return scoresMasked.data
+		if scoresMasked.count() < 1 or (time.time() - startTime) >= (2 * 3600):
+			return scoresMasked.data, scoresMasked.mask, scoresMasked.count(), icTested
+	return scoresMasked.data, scoresMasked.mask, scoresMasked.count(), icTested
 
 def evolve(controllers,scores):
 	bestControllerIdx = np.argmax(scores)
 	totalScore = sum(scores)
 	CopCont=[(int(math.ceil(9.0*score/totalScore)),idx) for idx,score in enumerate(scores)]
 	CopCont.sort()
-
 	toMutate=[]
 	
-	for i in CopCont:
-	    for j in range(i[0]):
-	        toMutate.append(controllers[i[1]])
+	for i in range(len(CopCont)-1,-1,-1):
+	    for j in range(CopCont[i][0]):
+	        toMutate.append(controllers[CopCont[i][1]])
 	        if len(toMutate)>=9:
 	            break
 	    if len(toMutate)>=9:
@@ -167,12 +166,15 @@ bestscore=0
 #MAIN LOOP
 startTime = time.time()
 while True:
-	s = evaluate(envsIdxCol,icCol,controllers,startTime)
+	s,m,t,t2 = evaluate(envsIdxCol,icCol,controllers,startTime)
 	max = s.max()
 	if bestscore < max:
 		bestscore = max
 		print(max)
 		print(s)
+		print(m)
+		print(t)
+		print(t2)
 	if np.max(s) != 60 and (time.time() - startTime) < (2 * 3600):
 		controllers = evolve(controllers,s)
 	else:
