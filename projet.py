@@ -102,7 +102,7 @@ def evolve(controllers,scores):
 	
 	for i in range(len(CopCont)-1,-1,-1):
 	    for j in range(CopCont[i][0]):
-	        toMutate.append(controllers[CopCont[i][1]])
+	        toMutate.append(np.copy(controllers[CopCont[i][1]]))
 	        if len(toMutate)>=9:
 	            break
 	    if len(toMutate)>=9:
@@ -134,7 +134,7 @@ def evolve(controllers,scores):
 						controller[w][u] = np.random.choice([-1,1])
 					except ValueError:
 						pass
-	return np.array([controllers[bestControllerIdx]]+toMutate)
+	return np.array([np.copy(controllers[bestControllerIdx])]+toMutate)
 
 #INITIAL CONDITIONS
 # icMat
@@ -166,7 +166,7 @@ bestscore=0
 #MAIN LOOP
 startTime = time.time()
 while True:
-	s,m,t,t2 = evaluate(envsIdxCol,icCol,controllers,startTime)
+	s,m,t,t2 = evaluate(envsIdxLin,icLin,controllers,startTime)
 	max = s.max()
 	if bestscore < max:
 		bestscore = max
