@@ -6,10 +6,10 @@ import sys
 import matplotlib.pyplot as plt
 import pickle
 
-# robot = 7 arms
-armsLengths = [1,1,1,1,1,1,1]
+#robot = 7 arms
+armsLengths = np.ones(7)
 
-# circle
+#circle
 rb =  4.13 # right big abscissa
 lb = -4.13 # left  big abscissa
 rs =  3.18 # right small abscissa
@@ -23,9 +23,6 @@ s  =  1.08 # small radius
 envs = [(lb,b,bb,5+4.47),(rs,s,bs,5+3.27),(rb,b,bb,5+4.47),(ls,s,bs,5+3.27)]
 
 def initNeurons(env):
-	global b
-	global lb
-	global ls
 	neurons = np.ones((7,2), dtype=np.int)
 	if env[1] == b:
 		neurons[:,0] *= -1
@@ -40,34 +37,34 @@ def getDesiredAngles(neurons):
 	return np.dot( np.array([30,15]), neurons.reshape((len(neurons)/2,2)).T)
 
 def getRandomController(connectionNb):
-	connections = np.zeros((14,14), dtype=np.int)
+	controller = np.zeros((14,14), dtype=np.int)
 	for i,j in random.sample([(i,j) for i in range(14) for j in range(14) if i!=j ],connectionNb):
-		connections[i,j] = np.random.choice([-1,1])
-	return connections
+		controller[i,j] = np.random.choice([-1,1])
+	return controller
 
 def step(neurons,controller):
 	return np.where( np.dot(neurons,controller) < 0, -1, 1)
 
-def getXY(angles):
-	global armsLengths
-	armsLeftFingersAngles = np.cumsum(angles[0:5])
-	angles = np.concatenate( (armsLeftFingersAngles , np.cumsum(angles[5:7]) + armsLeftFingersAngles[2]) )
-	arms = [ [0.,0.] ]
-	for idx,angle in enumerate(angles[0:3]):
-		x=arms[idx][0] + armsLengths[idx] * round(math.sin(math.radians(angle)),2)
-		y=arms[idx][1] + armsLengths[idx] * round(math.cos(math.radians(angle)),2)
-		arms.append([x,y])
-	leftFingers = [ list(arms[-1]) ]
-	for idx,angle in enumerate(angles[3:5]):
-		x=leftFingers[idx][0] + armsLengths[idx+3] * round(math.sin(math.radians(angle)),2)
-		y=leftFingers[idx][1] + armsLengths[idx+3] * round(math.cos(math.radians(angle)),2)
-		leftFingers.append([x,y])
-	rightFingers = [ list(arms[-1]) ]
-	for idx,angle in enumerate(angles[5:7]):
-		x=rightFingers[idx][0] + armsLengths[idx+5] * round(math.sin(math.radians(angle)),2)
-		y=rightFingers[idx][1] + armsLengths[idx+5] * round(math.cos(math.radians(angle)),2)
-		rightFingers.append([x,y])
-	return np.array( arms+leftFingers[1:]+rightFingers[1:] )
+def getXY(desiredAngles):
+	armAngles = np.cumsum(desiredAngles[:3])
+	leftHandAngles = np.cumsum(desiredAngles[3:-2]) + armAngles[-1]
+	rightHandAngles = np.cumsum(desiredAngles[-2:]) + armAngles[-1]
+	armPositions = [ [0.,0.] ]
+	for idx,angle in enumerate(armAngles):
+		x=armPositions[-1][0] + armsLengths[idx] * round(math.sin(math.radians(angle)),2)
+		y=armPositions[-1][1] + armsLengths[idx] * round(math.cos(math.radians(angle)),2)
+		armPositions.append([x,y])
+	leftHandPositions = [ armPositions[-1] ]
+	for idx,angle in enumerate(leftHandAngles):
+		x=leftHandPositions[-1][0] + armsLengths[idx+3] * round(math.sin(math.radians(angle)),2)
+		y=leftHandPositions[-1][1] + armsLengths[idx+3] * round(math.cos(math.radians(angle)),2)
+		leftHandPositions.append([x,y])
+	rightHandPositions = [ armPositions[-1] ]
+	for idx,angle in enumerate(rightHandAngles):
+		x=rightHandPositions[-1][0] + armsLengths[idx+5] * round(math.sin(math.radians(angle)),2)
+		y=rightHandPositions[-1][1] + armsLengths[idx+5] * round(math.cos(math.radians(angle)),2)
+		rightHandPositions.append([x,y])
+	return np.array( armPositions+leftHandPositions[1:]+rightHandPositions[1:] )
 
 def getFitness(envIdx,neurons):
 	global envs
@@ -101,8 +98,8 @@ def evolve(controllers,scores):
 	totalScore = sum(scores)
 	CopCont=[(int(math.ceil(9.0*score/totalScore)),idx) for idx,score in enumerate(scores)]
 	CopCont.sort()
-	controllersToMutate=[]
 	
+	controllersToMutate=[]
 	for i in range(len(CopCont)-1,-1,-1):
 		for j in range(CopCont[i][0]):
 			controllersToMutate.append(np.copy(controllers[CopCont[i][1]]))
@@ -117,7 +114,7 @@ def evolve(controllers,scores):
 	return np.array([np.copy(controllers[bestControllerIdx])]+controllersToMutate)
 
 def mutate(controller):
-	r = np.sum( controller != 0, axis=0)
+	r = np.sum( np.absolute(controller), axis=0)
 	for u,ru in enumerate(r) :
 		#node u targeted for change
 		if(np.random.rand(1)<=0.05):
@@ -126,7 +123,7 @@ def mutate(controller):
 			if np.random.rand(1)<=pu:
 				try:
 					w = np.random.choice( np.flatnonzero(controller[:,u]) )
-					controller[w][u] = 0
+					controller[w][u] = 1
 				except ValueError:
 					pass
 			#random incoming connection has to be created
